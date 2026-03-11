@@ -10,13 +10,15 @@ public:
     Default();
     static QString appName;
     static QString configName;
+    static QString configPath;
+    static QString configSuffix;
     static QString getConfigPath();
     static QString getAppPath();
     static void setDefaultConfigFiles();
-    static void deleteConfig(int dialId);
+    static void deleteConfig(QString dialId);
 
-    static Dial importConfigFiles();
-    static QString extractSingleKeyPairValueFromJson(QString* json, QString key);
+    static Dial importConfigFile(QString dialId);
+    static QString jsonGetKeyValue(QString* json, QString key);
 };
 
 #endif // DEFAULT_H

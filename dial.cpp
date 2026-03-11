@@ -41,12 +41,12 @@ QString Dial::exportToJson() {
 }
 
 bool Dial::importFromJson(QString* json) {
-    this->dialId = Default::extractSingleKeyPairValueFromJson(json, "dialId");
-    this->setId = Default::extractSingleKeyPairValueFromJson(json, "setId").toInt();
-    this->keyBind = Default::extractSingleKeyPairValueFromJson(json, "keyBind");
+    this->dialId = Default::jsonGetKeyValue(json, "dialId");
+    this->setId = Default::jsonGetKeyValue(json, "setId").toInt();
+    this->keyBind = Default::jsonGetKeyValue(json, "keyBind");
 
     QRegularExpression jsonArrayToSplitAt = QRegularExpression("}\\s+,\\s+{");
-    QStringList keyArray = Default::extractSingleKeyPairValueFromJson(json, "keys").split("},{");
+    QStringList keyArray = Default::jsonGetKeyValue(json, "keys").split("},{");
     // std::cout << "keyArray: " << keyArray.join("--").toStdString() << '\n';
     for (int i = 0; i < keyArray.length(); i++) {
         QString keyJson = QString(keyArray[i]);

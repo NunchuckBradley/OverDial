@@ -29,10 +29,10 @@ QString DialKey::exportToJson() {
 bool DialKey::importFromJson(QString* json) {
 
     // std::cout << json->toStdString() << std::endl;
-    this->keyEmulate = Default::extractSingleKeyPairValueFromJson(json, "keyEmulate");
+    this->keyEmulate = Default::jsonGetKeyValue(json, "keyEmulate");
     // std::cout << "keyemulate!!!!   " << this->keyEmulate.toStdString() << std::endl;
-    this->weight = Default::extractSingleKeyPairValueFromJson(json, "weight").toInt();
-    this->imagePath = Default::extractSingleKeyPairValueFromJson(json, "imagePath");
+    this->weight = Default::jsonGetKeyValue(json, "weight").toInt();
+    this->imagePath = Default::jsonGetKeyValue(json, "imagePath");
 
     this->isActive = true;
 

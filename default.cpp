@@ -12,6 +12,8 @@
 #include <iostream>
 
 QString Default::appName = "OverDial";
+QString Default::configPath = "config";
+QString Default::configSuffix = ".json";
 QString Default::configName = "config.cfg";
 
 
@@ -29,8 +31,10 @@ QString Default::getAppPath() {
 }
 
 QString Default::getConfigPath() {
-    return Default::getAppPath() + "/" + Default::configName;
+    return Default::getAppPath() + "/" + Default::configPath;
 }
+
+
 
 void Default::setDefaultConfigFiles() {
     QDir* appFolder = new QDir(Default::getAppPath());
@@ -43,7 +47,7 @@ void Default::setDefaultConfigFiles() {
         std::cout << "Config folder already exists..." << '\n';
     }
 
-    if ( ! QFile::exists(Default::getConfigPath())) {
+    if ( ! QFile::exists(Default::getConfigPath() + "/" + "standard" + Default::configSuffix)) {
         std::cout << "Creating config file at   : " << Default::getConfigPath().toStdString() << '\n';
 
         Dial* standardDial = new Dial();
@@ -67,18 +71,20 @@ void Default::setDefaultConfigFiles() {
         standardDial->keys[0] = copy;
         standardDial->keys[1] = paste;
         standardDial->keys[2] = cut;
+        standardDial->keyCount = 3;
 
         QString json = standardDial->exportToJson();
         // QString json = copy->exportToJson();
 
         // write json to the file
-        QFile configFile(Default::getConfigPath());
+        QFile configFile(Default::getConfigPath() + "/" + "standard" + Default::configSuffix);
         configFile.open(QIODevice::WriteOnly | QIODevice::Text);
         QTextStream out(&configFile);
         out << json;
         configFile.close();
 
-        std::cout << "Config file created at   : " << Default::getConfigPath().toStdString() << '\n';
+        std::cout << "Config file created in   : " << Default::getConfigPath().toStdString() << '\n';
+        std::cout << "Config file created as   : " << configFile.fileName().toStdString() << '\n';
 
     } else {
         std::cout << "Config file already exists..." << '\n';
@@ -87,41 +93,51 @@ void Default::setDefaultConfigFiles() {
     return;
 }
 
-void Default::deleteConfig(int dialId) {
+void Default::deleteConfig(QString dialId) {
     // incorperate dialId to delete specific ones, if 0 delete all of them
-    if( dialId > 0) {
+    // if( dialId > 0) {
 
-    }
-    else {
+    // }
+    // else {
         // delete whole config as a file
-        QFile::remove(Default::getConfigPath());
+        QFile::remove(Default::getConfigPath() + "/" + dialId + Default::configSuffix);
         // recreate config file?
         // Default::setDefaultConfigFiles();
-    }
+    // }
 }
 
-Dial Default::importConfigFiles() {
-    QFile file_obj(Default::getConfigPath());
+Dial Default::importConfigFile(QString dialId) {
+    QDir configPath = QDir(Default::getConfigPath());
+    QStringList cfg = configPath.entryList(QStringList() << Default::configSuffix, QDir::Files);
+    // loop for each file in directory
+    // Dial configs[100];
 
-    if (!file_obj.open(QIODevice::ReadOnly)) {
-        std::cout << "Failed to open " << Default::getConfigPath().toStdString() << std::endl;
-        exit(1);
-    }
+    // for (QString file : cfg) {
+        QFile file_obj(Default::getConfigPath() + "/" + dialId);
 
-    // step 2
-    QTextStream file_text(&file_obj);
-    QString json_string;
-    json_string = file_text.readAll();
-    file_obj.close();
-    QByteArray json_bytes = json_string.toLocal8Bit();
+        if (!file_obj.open(QIODevice::ReadOnly)) {
+            std::cout << "Failed to open " << Default::getConfigPath().toStdString() << std::endl;
+            exit(1);
+        }
 
-    Dial configs = Dial();
-    configs.importFromJson(&json_string);
+        // step 2
+        QTextStream file_text(&file_obj);
+        QString json_string;
+        json_string = file_text.readAll();
+        file_obj.close();
+        // QByteArray json_bytes = json_string.toLocal8Bit();
+        Dial config = Dial();
 
-    return configs;
+        config.importFromJson(&json_string);
+        return config;
+    // }
+
+
+
+    // return &configs;
 }
 
-QString Default::extractSingleKeyPairValueFromJson(QString* json, QString key) {
+QString Default::jsonGetKeyValue(QString* json, QString key) {
     // QByteArray json_bytes = json->toLocal8Bit();
     // first find location of key value
     QString tmp = *json;
@@ -141,9 +157,10 @@ QString Default::extractSingleKeyPairValueFromJson(QString* json, QString key) {
     // static QRegularExpression notWhiteSpace("([^|]*)");
     // create posibilities for this solution
     QChar val = from.at(0);
+    from = from.mid(1);
 
     // std::cout << "val detected... " << QString(val).toStdString() << std::endl;
-    // std::cout << "timmed full ... " << from.trimmed().toStdString() << std::endl;
+    // std::cout << "       full ... " << from.toStdString() << std::endl;
 
 
     // prepare for NESTED and ARRAYS and STRINGS and NUMBERS
@@ -168,6 +185,10 @@ QString Default::extractSingleKeyPairValueFromJson(QString* json, QString key) {
         // std::cout << "lb/rb...   " << lb.toStdString() << "/" << rb.toStdString() << std::endl;
 
         int tally = 0; // run a tally incase there are nested objects
+        // Example incase of close quote empty string values
+        if (from.at(0) == rb) {
+            return QString("");
+        }
         for (int i = 1; i < from.size(); i++) {
             if (from.at(i) == rb) {
                 // std::cout << "hit an end... tally..." << tally << std::endl;
@@ -176,8 +197,9 @@ QString Default::extractSingleKeyPairValueFromJson(QString* json, QString key) {
                     tally--;
                 }
                 else {
-                    std::cout << key.toStdString() << " : " << from.left(i+1).toStdString() << std::endl;
-                    return from.left(i+1);
+                    std::cout << key.toStdString() << " : " << from.left(i).toStdString() << std::endl;
+
+                    return from.left(i);
                 }
             }
             if (from.at(i) == lb) {
