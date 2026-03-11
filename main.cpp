@@ -17,11 +17,13 @@ int main(int argc, char *argv[])
     // import those files/config which were created, this variable to be used and change during operation
     Dial config = Default::importConfigFiles();
 
+
     // TESTING DIALKEY JSON -- START
     // QString exampleJson = "{keyEmulate : \"lctrl+c\", weight : \"1\", imagePath : \"\"}";
     // DialKey* test = new DialKey();
     // test->importFromJson(&exampleJson);
-    std::cout << "Your config is: " << config.exportToJson().toStdString() << '\n';
+    QString exported = config.exportToJson();
+    std::cout << "Your config is: " << exported.toStdString() << '\n';
     // TESTING DIALKEY JSON -- END
 
     // // Set and Launch QT application
